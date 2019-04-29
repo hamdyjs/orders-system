@@ -4,5 +4,10 @@
   "description": "Microservice for token generation and verification",
   "main": "index.js",
   "author": "Ahmed Hamdy",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.16.4",
+    "jsonwebtoken": "^8.5.1"
+  }
 }
