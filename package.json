@@ -1,0 +1,8 @@
+{
+  "name": "orders-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "Ahmed Hamdy",
+  "license": "ISC"
+}
