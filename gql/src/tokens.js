@@ -1,17 +1,21 @@
-const jwt = require("jsonwebtoken");
+const request = require("request");
 const secret = "mysecret";
 
 module.exports = {
-    sign: function(payload) {
-        var err, token = jwt.sign(payload, secret);
-        return err, token;
+    sign: function(id) {
+        return new Promise(function(resolve, reject) {
+            request.post("http://localhost:3001/generate", {json: {buyerID: id}}, function(err, res, body) {
+                if (err || !body) reject(err.toString());
+                resolve(body.token);
+            });
+        });
     },
     verify: function(token) {
-        try {
-            var payload = jwt.verify(token, secret);
-            return payload;
-        } catch(err) {
-            return null;
-        }
+        return new Promise(function(resolve, reject) {
+            request.post("http://localhost:3001/verify", {json: {token}}, function(err, res, body) {
+                if (err || !body) reject(err.toString());
+                resolve(body.buyerID);
+            });
+        });
     },
 }
