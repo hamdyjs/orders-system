@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
 var buyerSchema = mongoose.Schema({
-    name: {
+    buyerName: {
         type: String,
         required: true,
     },
-    authToken: {
+    buyerAuthToken: {
         type: String,
         required: true
     }
