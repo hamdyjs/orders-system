@@ -1,11 +1,11 @@
-const graphql = require("graphql");
+const graphql_tools = require("graphql-tools");
 var tokens = require("./tokens");
 
 var Product = require("./product.model");
 var Buyer = require("./buyer.model");
 var Order = require("./order.model");
 
-var schema = graphql.buildSchema(`
+var typeDefs = `
     type Query {
         getProducts: [Product!],
         getBuyers: [Buyer!],
@@ -28,56 +28,68 @@ var schema = graphql.buildSchema(`
     },
     type Order {
         id: String,
-        buyer: String,
-        product: String,
+        buyer: Buyer,
+        product: Product,
         timestamp: String
     }
-`);
+`;
 
-var root = {
-    getProducts: function() {
-        return Product.find().exec();
-    },
-    getBuyers: function() {
-        return Buyer.find().exec();
-    },
-    getOrders: function() {
-        return Order.find().exec();
-    },
-    getBuyerOrders: function(args, context) {
-        var token = context.headers.authorization;
-        if (token) {
-            token = token.substring(4);
-            var payload = tokens.verify(token);
-            if (payload && args.buyerID == payload.id) {
-                return Order.find({buyer: args.buyerID}).exec();
+var resolvers = {
+    Query: {
+        getProducts: function() {
+            return Product.find().exec();
+        },
+        getBuyers: function() {
+            return Buyer.find().exec();
+        },
+        getOrders: function() {
+            return Order.find().exec();
+        },
+        getBuyerOrders: function(args, context) {
+            var token = context.headers.authorization;
+            if (token) {
+                token = token.substring(4);
+                var payload = tokens.verify(token);
+                if (payload && args.buyerID == payload.id) {
+                    return Order.find({buyer: args.buyerID}).exec();
+                } else {
+                    throw new Error("Wrong authorization token");
+                }
             } else {
-                throw new Error("Wrong authorization token");
+                throw new Error("Not authorized");
             }
-        } else {
-            throw new Error("Not authorized");
+        },
+    },
+    Mutation: {
+        createProduct: function(args) {
+            var p = new Product({productName: args.productName});
+            p.save();
+            return p;
+        },
+        createBuyer: function(args) {
+            var b = new Buyer({buyerName: args.buyerName});
+            var token = tokens.sign({id: b.id});
+            b.buyerAuthToken = token;
+            b.save();
+            return b;
+        },
+        createOrder: function(args) {
+            var o = new Order({
+                buyer: args.buyerID,
+                product: args.productID,
+            });
+            o.save();
+            return o;
         }
     },
-    createProduct: function(args) {
-        var p = new Product({productName: args.productName});
-        p.save();
-        return p;
-    },
-    createBuyer: function(args) {
-        var b = new Buyer({buyerName: args.buyerName});
-        var token = tokens.sign({id: b.id});
-        b.buyerAuthToken = token;
-        b.save();
-        return b;
-    },
-    createOrder: function(args) {
-        var o = new Order({
-            buyer: args.buyerID,
-            product: args.productID,
-        });
-        o.save();
-        return o;
+    Order: {
+        buyer: function(order) {
+            return Buyer.findById(order.buyer).exec();
+        },
+        product: function(order) {
+            return Product.findById(order.product).exec();
+        }
     }
 };
 
-module.exports = {schema, root};
+module.exports = graphql_tools.makeExecutableSchema({typeDefs, resolvers});
