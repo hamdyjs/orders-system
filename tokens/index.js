@@ -9,18 +9,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.post("/generate", function(req, res) {
-    var buyerID = req.body.buyerID;
-    var err, token = jwt.sign({buyerID}, secret);
-    console.log(buyerID, token);
-    if (err) res.status(200).end();
-    else res.status(200).send(token);
+    var payload = req.body;
+    var err, token = jwt.sign({payload}, secret);
+    if (err) res.status(200);
+    else res.status(200).send({token});
 });
 
 app.post("/verify", function(req, res) {
     var token = req.body.token;
     var payload = jwt.verify(token, secret);
-    console.log(token, payload.buyerID);
-    if (payload) res.status(200).send(payload.buyerID);
+    if (payload) res.status(200).send(payload.payload);
     else res.status(200).end();
 });
 
