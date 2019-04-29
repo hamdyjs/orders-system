@@ -45,35 +45,37 @@ var resolvers = {
         getOrders: function() {
             return Order.find().exec();
         },
-        getBuyerOrders: function(args, context) {
+        getBuyerOrders: function(root, args, context) {
             var token = context.headers.authorization;
             if (token) {
                 token = token.substring(4);
-                var payload = tokens.verify(token);
-                if (payload && args.buyerID == payload.id) {
-                    return Order.find({buyer: args.buyerID}).exec();
-                } else {
-                    throw new Error("Wrong authorization token");
-                }
+                return tokens.verify(token).then(function(buyerID) {
+                    if (buyerID && args.buyerID == buyerID) {
+                        return Order.find({buyer: buyerID}).exec();
+                    } else {
+                        throw new Error("Wrong authorization token");
+                    }
+                });
             } else {
                 throw new Error("Not authorized");
             }
         },
     },
     Mutation: {
-        createProduct: function(args) {
+        createProduct: function(root, args) {
             var p = new Product({productName: args.productName});
             p.save();
             return p;
         },
-        createBuyer: function(args) {
+        createBuyer: function(root, args) {
             var b = new Buyer({buyerName: args.buyerName});
-            var token = tokens.sign({id: b.id});
-            b.buyerAuthToken = token;
-            b.save();
-            return b;
+            return tokens.sign(b.id).then(function(token) {
+                b.buyerAuthToken = token;
+                b.save();
+                return b;
+            });
         },
-        createOrder: function(args) {
+        createOrder: function(root, args) {
             var o = new Order({
                 buyer: args.buyerID,
                 product: args.productID,
