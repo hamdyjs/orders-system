@@ -1,7 +1,7 @@
 {
-  "name": "orders-system",
+  "name": "orders-system-gql",
   "version": "1.0.0",
-  "description": "",
+  "description": "Microservice for GraphQL resolvers and logic",
   "main": "index.js",
   "author": "Ahmed Hamdy",
   "license": "ISC",
